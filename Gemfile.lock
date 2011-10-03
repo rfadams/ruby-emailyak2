@@ -4,6 +4,7 @@ PATH
     emailyak (0.0.1)
       json
       rest-client
+      yajl-ruby (>= 0.8.3)
 
 GEM
   remote: http://rubygems.org/
@@ -12,6 +13,7 @@ GEM
     mime-types (1.16)
     rest-client (1.6.7)
       mime-types (>= 1.16)
+    yajl-ruby (0.8.3)
 
 PLATFORMS
   ruby
@@ -20,3 +22,4 @@ DEPENDENCIES
   emailyak!
   json
   rest-client
+  yajl-ruby (>= 0.8.3)

@@ -2,7 +2,8 @@ require 'cgi'
 require 'set'
 
 require 'rubygems'
-require 'json'
+# require 'json'
+require 'yajl'
 require 'openssl'
 require 'rest_client'
 
@@ -12,6 +13,7 @@ require 'rest_client'
 # Further adapted from https://github.com/gdb/emailyak-ruby 
 # because I couldn't get it to install on heroku and 
 # I wanted to add to it
+
 module EmailYak
   # @@version = '0.0.1'
   @@ssl_bundle_path = File.join(File.dirname(__FILE__), 'data/ca-certificates.crt')
@@ -29,6 +31,20 @@ module EmailYak
         true
       end
     end
+  end
+  
+  def self.docs(url=self.api_docs_url)
+    begin
+    puts "opening api docs at #{self.api_docs_url} "
+    `open #{url}`
+    rescue
+      false
+    end
+    true
+  end
+  
+  def self.api_docs_url
+    "http://docs.emailyak.com/"
   end
 
   class EmailYakError < StandardError; end
@@ -69,12 +85,12 @@ module EmailYak
       EmailYak.request(:get, 'get/new/email/', nil, params)
     end
     
-    def self.delete(params={})
-      EmailYak.request(:post, 'delete/email/', nil, params)
-    end
-    
     def self.send(params={})
       EmailYak.request(:post, 'send/email/', nil, params)
+    end
+    
+    def self.delete(params={})
+      EmailYak.request(:post, 'delete/email/', nil, params)
     end
   end
   
@@ -119,7 +135,11 @@ module EmailYak
       headers = { :params => params }.merge(headers)
       payload = nil
     else
-      payload = params
+      
+      
+      headers = {:content_type => 'application/json'}
+      payload = Yajl::Encoder.encode(params)
+      puts payload
     end
     opts = {
       :method => method,
@@ -130,7 +150,7 @@ module EmailYak
       :payload => payload,
       :timeout => 80
     }.merge(ssl_opts)
-
+    # puts params.inspect
     begin
       response = execute_request(opts)
     rescue SocketError => e
@@ -144,6 +164,7 @@ module EmailYak
         raise
       end
     rescue RestClient::ExceptionWithResponse => e
+      puts e
       if rcode = e.http_code and rbody = e.http_body
         self.handle_api_error(rcode, rbody)
       else
@@ -156,8 +177,10 @@ module EmailYak
     rbody = response.body
     rcode = response.code
     begin
-      resp = JSON.parse(rbody, :symbolize_names => true)
-    rescue JSON::ParseError
+      # Yajl::Encoder.encode(params)
+      resp = Yajl::Parser.parse(rbody)
+      # resp = JSON.parse(rbody, :symbolize_names => true)
+    rescue
       raise APIError.new("Invalid response object from API: #{rbody.inspect} (HTTP response code was #{rcode})")
     end
 
@@ -195,7 +218,7 @@ module EmailYak
     when 431
       raise APIResponseCodeError.new('Invalid Response Format. In the url, specify ../json/.. or ../xml/..', rcode, rbody)
     when 432
-      raise APIResponseCodeError.new('Invalid when 431(Request Format. Needs to be JSON or XML.', rcode, rbody)
+      raise APIResponseCodeError.new('Invalid when 431 Request Format. Needs to be JSON or XML.', rcode, rbody)
     when 503
       raise APIResponseCodeError.new('Service is Temporarily Down. Please stand by.', rcode, rbody)
     else

@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Emailyak::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Scott Ballantyne", 'Greg Brockman']
-  s.email       = ["ussballantyne@gmail.cm", 'gdb@gregbrockman.com']
+  s.email       = ["ussballantyne@gmail.com", 'gdb@gregbrockman.com']
   s.homepage    = ""
   s.summary     = %q{making several different emailyak projects into a gem}
   s.description = %q{making several different emailyak projects into a gem description}
@@ -20,4 +20,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.add_dependency(%q<rest-client>, [">= 0"])
   s.add_dependency(%q<json>, [">= 0"])
+  s.add_dependency('yajl-ruby', '>= 0.8.3')
 end
